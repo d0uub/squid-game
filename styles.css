@@ -1,0 +1,85 @@
+body {
+    margin: 0; padding: 0; overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #87CEEB, #98D8E8);
+}
+
+#gameContainer { position: relative; width: 100vw; height: 100vh; }
+
+#ui {
+    position: absolute; top: 20px; left: 20px; z-index: 100;
+    color: white; font-size: 18px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    display: none;
+}
+
+#gameStatus {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 100; color: #ff4444; font-size: 48px; font-weight: bold;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.8); display: none; text-align: center;
+}
+
+#startScreen {
+    position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: white; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; z-index: 200;
+    color: black; text-align: center;
+}
+
+#gameTitle {
+    font-size: 64px; font-weight: bold; margin-bottom: 20px;
+    text-shadow: 4px 4px 8px rgba(0,0,0,0.8); color: #ff4444;
+}
+
+#gameSubtitle {
+    font-size: 32px; margin-bottom: 40px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8); color: #ffff88;
+}
+
+.btn {
+    border: none; color: white; padding: 15px 30px; font-size: 18px;
+    font-weight: bold; border-radius: 10px; cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: all 0.3s ease;
+}
+
+#startButton {
+    background: linear-gradient(45deg, #ff4444, #cc3333);
+    padding: 20px 40px; font-size: 24px; border-radius: 15px;
+    text-transform: uppercase; letter-spacing: 2px;
+}
+
+#startButton:hover {
+    background: linear-gradient(45deg, #cc3333, #aa2222);
+    transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+}
+
+#startButton:active { transform: translateY(0); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+
+#restartButton {
+    background: linear-gradient(45deg, #ff4444, #cc3333);
+    margin-top: 20px; display: none; z-index: 200; position: relative;
+}
+
+#debugPanel {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.9); color: #00ff00; font-family: monospace;
+    font-size: 12px; z-index: 300; max-height: 200px; overflow-y: auto; display: none;
+}
+
+#debugHeader {
+    background: rgba(0,0,0,0.8); padding: 10px; cursor: pointer;
+    border-bottom: 1px solid #333;
+}
+
+#debugContent { padding: 10px; max-height: 150px; overflow-y: auto; }
+
+#debugToggleCollapsed {
+    position: fixed; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7);
+    color: #00ff00; padding: 8px 12px; border-radius: 5px; cursor: pointer;
+    font-family: monospace; font-size: 12px; z-index: 300; display: none;
+}
+
+#joystick-zone {
+    position: fixed; bottom: 20px; left: 20px; width: 120px; height: 120px;
+    z-index: 1000; border-radius: 50%; background: rgba(255,255,255,0.3);
+    border: 2px solid rgba(255,255,255,0.5);
+}

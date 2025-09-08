@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squid Game - Red Light Green Light</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.1/dist/nipplejs.min.js"></script>
+    <!-- PeerJS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Ensure multiplayerScreen overlays the game */
+        #multiplayerScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(135, 206, 235, 0.98); /* Slightly opaque sky blue */
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Ensure readyScreen overlays the game */
+        #readyScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(135, 206, 235, 0.98); /* Slightly opaque sky blue */
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Hide Three.js renderer when multiplayerScreen is visible */
+        .hide-game-canvas canvas {
+            display: none !important;
+        }
+    </style>
+    <script src="object.js"></script>
+    <script src="control.js"></script>
+    <script src="peerjs_webrtc.js"></script>
+    <script src="multiplayer.js"></script>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="startScreen">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/57/Squid_Game_2021_vector_logo_english.svg" alt="Squid Game" style="width: 400px; height: auto; margin-bottom: 40px;">
+            <button id="startButton" class="btn">Start Game</button>
+            <button id="multiplayerButton" class="btn" style="margin-left: 10px;">Multiplayer</button>
+        </div>
+        
+        <div id="ui">
+            <div>Distance to finish: <span id="distance">130m</span></div>
+            <div>Status: <span id="status">GREEN LIGHT - MOVE!</span></div>
+        </div>
+
+        <!-- Multiplayer UI containers -->
+        <div id="multiplayerScreen" style="display:none; flex-direction:column; align-items:center; justify-content:center;">
+            <h2>Multiplayer Setup</h2>
+            <div id="peerjs-ui"></div>
+            <button id="backFromMultiplayer" class="btn" style="margin-top:10px;">Back</button>
+        </div>
+
+        <div id="readyScreen" style="display:none; flex-direction:column; align-items:center; justify-content:center;">
+            <h2>Ready Up</h2>
+            <div>Role: <span id="playerRole"></span></div>
+            <div>Players Ready: <span id="readyCount">0/2</span></div>
+            <button id="readyButton" class="btn">I'm Ready</button>
+            <div id="waitingMessage" style="display:none;">Waiting for other player...</div>
+        </div>
+
+        
+        <div id="gameStatus">
+            <div id="statusText"></div>
+            <button id="restartButton" class="btn">Play Again</button>
+        </div>
+        
+    <!-- Debug panel removed -->
+    </div>
+
+    <script>
+        // Game variables
+        let scene, camera, renderer, player, doll;
+        let isGreenLight = true;
+        let gameOver = false;
+        let won = false;
+        let playerSpeed = 0.2;
+        let dollRotation = Math.PI;
+        let lightTimer = 0;
+        let lightDuration = 3000; // 3 seconds
+        let isMoving = false;
+        let greenLightAudio = null;
+        let audioLoaded = false;
+        let gameStarted = false;
+        
+        // Initialize the game
+        function init() {
+            // Initialize controls
+            initControls();
+            
+            // Initialize green light audio
+            greenLightAudio = new Audio('https://www.myinstants.com/media/sounds/squid-game-v-2.mp3');
+            greenLightAudio.volume = 0.6;
+            greenLightAudio.addEventListener('loadeddata', () => {
+                audioLoaded = true;
+            });
+            greenLightAudio.addEventListener('ended', () => {
+                // When audio ends, switch to red light
+                if (!gameOver && !won && isGreenLight) {
+                    switchToRedLight();
+                }
+            });
+            
+            // Monitor audio progress to stop at 85%
+            greenLightAudio.addEventListener('timeupdate', () => {
+                if (greenLightAudio.duration && greenLightAudio.currentTime >= greenLightAudio.duration * 0.85) {
+                    if (!gameOver && !won && isGreenLight) {
+                        switchToRedLight();
+                    }
+                }
+            });
+            
+            // Create scene
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x87CEEB, 50, 200);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 8, 15);
+            camera.lookAt(0, 2, 0);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x87CEEB);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('gameContainer').appendChild(renderer.domElement);
+            
+            // Create lighting
+            createLighting();
+            
+            // Create ground
+            createGround();
+            
+            // Create player (human-like block character)
+            player = createPlayer();
+            scene.add(player);
+            
+            // Create Young-hee doll (5 times larger than player)
+            doll = createDoll();
+            scene.add(doll);
+            
+            // Generate all random objects (trees, holes, clouds)
+            generateAllObjects();
+            
+            // Start game loop
+            animate();
+            
+            // Add event listeners
+            document.getElementById('startButton').addEventListener('click', startGame);
+
+            document.getElementById('restartButton').addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                restartGame();
+            });
+
+            // Multiplayer button event
+            document.getElementById('multiplayerButton').addEventListener('click', () => {
+                showMultiplayerScreen();
+            });
+            
+            // Multiplayer event listeners would be set up in multiplayer.js
+            
+            // Debug panel listeners removed
+            
+            // Debug log initialization removed
+        }
+        
+        function startGame() {
+            if (gameStarted) return;
+            
+            gameStarted = true;
+            
+            // Hide start screen
+            document.getElementById('startScreen').style.display = 'none';
+            
+            // Show UI elements
+            document.getElementById('ui').style.display = 'block';
+            
+
+            
+            // Show multiplayer UI if in multiplayer mode
+                // Multiplayer UI is handled by multiplayerScreen and readyScreen
+            
+            // Start the first green light cycle with music
+            setTimeout(() => {
+                startGreenLight();
+            }, 500); // Small delay to ensure everything is loaded
+        }
+        
+        function startLightCycle() {
+            if (gameOver || won) return;
+            
+            // This function is now handled by direct calls to startGreenLight
+        }
+        
+        function startGreenLight() {
+            if (gameOver || won) return;
+            
+            // Only host controls game timing
+            if (isMultiplayer && !isHost) return;
+            
+            isGreenLight = true;
+            dollRotation = Math.PI; // Doll turns away
+            updateUI();
+            
+            // Sync game state with other player (only host controls timing)
+            if (isMultiplayer && isHost) {
+                sendMultiplayerData({
+                    type: 'gameState',
+                    isGreenLight: isGreenLight,
+                    dollRotation: dollRotation
+                });
+            }
+            
+            // Play green light audio with random speed (only on host)
+            if (greenLightAudio && (!isMultiplayer || isHost)) {
+                // Random playback speed between 1.5x and 2.9x
+                const randomSpeed = 1.5 + Math.random() * 1.4;
+                greenLightAudio.playbackRate = randomSpeed;
+                greenLightAudio.currentTime = 0;
+                greenLightAudio.play().catch(e => {
+                    console.log('Audio play failed:', e);
+                    // If audio fails, use timer fallback
+                    setTimeout(() => {
+                        if (!gameOver && !won && isGreenLight) {
+                            switchToRedLight();
+                        }
+                    }, 3000 + Math.random() * 2000); // 3-5 seconds fallback
+                });
+            } else {
+                // Fallback timer if no audio (only for single player or host)
+                if (!isMultiplayer || isHost) {
+                    setTimeout(() => {
+                        if (!gameOver && !won && isGreenLight) {
+                            switchToRedLight();
+                        }
+                    }, 3000 + Math.random() * 2000); // 3-5 seconds fallback
+                }
+            }
+        }
+        
+        function switchToRedLight() {
+            if (gameOver || won) return;
+            
+            // Only host controls game timing
+            if (isMultiplayer && !isHost) return;
+            
+            // Switch to red light
+            isGreenLight = false;
+            dollRotation = 0; // Doll faces player
+            updateUI();
+            
+            // Sync game state with other player (only host controls timing)
+            if (isMultiplayer && isHost) {
+                sendMultiplayerData({
+                    type: 'gameState',
+                    isGreenLight: isGreenLight,
+                    dollRotation: dollRotation
+                });
+            }
+            
+            // Stop green light audio if playing (only on host)
+            if (greenLightAudio && !greenLightAudio.paused && (!isMultiplayer || isHost)) {
+                greenLightAudio.pause();
+            }
+            
+            // Check if player was moving during red light for 2 seconds (only host controls timing)
+            if (!isMultiplayer || isHost) {
+                setTimeout(() => {
+                    if (!gameOver && !won) {
+                        startGreenLight();
+                    }
+                }, 2000); // Red light lasts 2 seconds
+            }
+        }
+        
+        function updateUI() {
+            const distance = Math.max(0, Math.round(player.position.z + 90));
+            document.getElementById('distance').textContent = distance + 'm';
+            
+            if (isGreenLight) {
+                document.getElementById('status').textContent = 'GREEN LIGHT - MOVE!';
+                document.getElementById('status').style.color = '#00ff00';
+            } else {
+                document.getElementById('status').textContent = 'RED LIGHT - STOP!';
+                document.getElementById('status').style.color = '#ff0000';
+            }
+            
+            // Only log game state changes when light changes, not every frame
+            // (removed to reduce debug spam)
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            handleMovement();
+            updateUI();
+            
+            // Animate doll using function from object.js
+            animateDoll();
+            
+            // Update camera to follow player
+            camera.position.x += (player.position.x - camera.position.x) * 0.05;
+            camera.position.z += (player.position.z + 15 - camera.position.z) * 0.05;
+            camera.lookAt(player.position.x, 2, player.position.z - 5);
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        function restartGame() {
+            // Reset game state
+            gameOver = false;
+            won = false;
+            isGreenLight = true;
+            dollRotation = Math.PI;
+            isMoving = false;
+            gameStarted = false;
+            
+            // Reset player position
+            player.position.set(0, 0, 40);
+            player.rotation.set(0, 0, 0);
+            
+            // Hide game status
+            document.getElementById('gameStatus').style.display = 'none';
+            document.getElementById('restartButton').style.display = 'none';
+            
+            if (isMultiplayer) {
+                // Reset multiplayer state using function from multiplayer.js
+                resetMultiplayerState();
+                
+                // Host regenerates and syncs random objects
+                if (isHost) {
+                    regenerateRandomObjects();
+                }
+                
+                // Reset ready screen UI
+                document.getElementById('readyButton').style.display = 'block';
+                document.getElementById('waitingMessage').style.display = 'none';
+                
+                showReadyScreen();
+            } else {
+                // Regenerate objects for single player using function from object.js
+                regenerateRandomObjects();
+                
+                // Start new game immediately for single player
+                setTimeout(() => {
+                    gameStarted = true;
+                    startGreenLight();
+                }, 500);
+            }
+        }
+
+        
+        // Start the game
+        init();
+    </script>
+</body>
+</html>
