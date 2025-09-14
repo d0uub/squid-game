@@ -5,44 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Squid Game - Red Light Green Light</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GLTFLoader for loading glTF models (global GLTFLoader) -->
+    <!-- GLTFLoader from official Three.js examples CDN -->
+    <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.1/dist/nipplejs.min.js"></script>
     <!-- PeerJS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* Ensure multiplayerScreen overlays the game */
-        #multiplayerScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(135, 206, 235, 0.98); /* Slightly opaque sky blue */
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        /* Ensure readyScreen overlays the game */
-        #readyScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(135, 206, 235, 0.98); /* Slightly opaque sky blue */
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        /* Hide Three.js renderer when multiplayerScreen is visible */
-        .hide-game-canvas canvas {
-            display: none !important;
-        }
-    </style>
     <script src="object.js"></script>
     <script src="control.js"></script>
     <script src="peerjs_webrtc.js"></script>
@@ -92,7 +61,7 @@
         let gameOver = false;
         let won = false;
         let playerSpeed = 0.2;
-        let dollRotation = Math.PI;
+        let dollRotation = 1.4;
         let lightTimer = 0;
         let lightDuration = 3000; // 3 seconds
         let isMoving = false;

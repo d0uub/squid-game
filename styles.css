@@ -83,3 +83,36 @@ body {
     z-index: 1000; border-radius: 50%; background: rgba(255,255,255,0.3);
     border: 2px solid rgba(255,255,255,0.5);
 }
+
+/* Ensure multiplayerScreen overlays the game */
+#multiplayerScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(135, 206, 235, 0.98); /* Slightly opaque sky blue */
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+/* Ensure readyScreen overlays the game */
+#readyScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(135, 206, 235, 0.98); /* Slightly opaque sky blue */
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+/* Hide Three.js renderer when multiplayerScreen is visible */
+.hide-game-canvas canvas {
+    display: none !important;
+}

@@ -135,109 +135,30 @@ function createPlayer() {
 
 // Create the Young-hee doll
 function createDoll() {
-    const doll = new THREE.Group();
-    doll.position.set(0, 0, -93);
-    
-    // Head - skin color with bowl cut hair
-    const dollHeadGeometry = new THREE.BoxGeometry(4, 4, 4);
-    const dollHeadMaterial = new THREE.MeshLambertMaterial({ color: 0xFFDBAE });
-    const dollHead = new THREE.Mesh(dollHeadGeometry, dollHeadMaterial);
-    dollHead.position.set(0, 12, 0);
-    dollHead.castShadow = true;
-    doll.add(dollHead);
-    
-    // Bowl cut hair - dark color
-    const dollHairGeometry = new THREE.BoxGeometry(4.2, 2, 4.2);
-    const dollHairMaterial = new THREE.MeshLambertMaterial({ color: 0x2F2F2F });
-    const dollHair = new THREE.Mesh(dollHairGeometry, dollHairMaterial);
-    dollHair.position.set(0, 13, 0);
-    dollHair.castShadow = true;
-    doll.add(dollHair);
-    
-    // Eyes - add to head so they rotate together
-    const dollEyeGeometry = new THREE.BoxGeometry(0.6, 0.6, 0.2);
-    const dollEyeMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
-    
-    const dollLeftEye = new THREE.Mesh(dollEyeGeometry, dollEyeMaterial);
-    dollLeftEye.position.set(-0.8, -0.5, 2.1);
-    dollHead.add(dollLeftEye);
-    
-    const dollRightEye = new THREE.Mesh(dollEyeGeometry, dollEyeMaterial);
-    dollRightEye.position.set(0.8, -0.5, 2.1);
-    dollHead.add(dollRightEye);
-    
-    // Yellow t-shirt (inner layer)
-    const dollShirtGeometry = new THREE.BoxGeometry(5.2, 6, 2.2);
-    const dollShirtMaterial = new THREE.MeshLambertMaterial({ color: 0xFFD700 });
-    const dollShirt = new THREE.Mesh(dollShirtGeometry, dollShirtMaterial);
-    dollShirt.position.set(0, 7, 0);
-    dollShirt.castShadow = true;
-    doll.add(dollShirt);
-    
-    // Orange dress (outer layer)
-    const dollDressGeometry = new THREE.BoxGeometry(5.5, 6.5, 2.5);
-    const dollDressMaterial = new THREE.MeshLambertMaterial({ color: 0xFF8C00 });
-    const dollDress = new THREE.Mesh(dollDressGeometry, dollDressMaterial);
-    dollDress.position.set(0, 6.8, 0);
-    dollDress.castShadow = true;
-    doll.add(dollDress);
-    
-    // Left upper arm - yellow
-    const dollUpperArmGeometry = new THREE.BoxGeometry(1.5, 2.5, 1.5);
-    const dollUpperArmMaterial = new THREE.MeshLambertMaterial({ color: 0xFFD700 });
-    const dollLeftUpperArm = new THREE.Mesh(dollUpperArmGeometry, dollUpperArmMaterial);
-    dollLeftUpperArm.position.set(-3.5, 8.75, 0);
-    dollLeftUpperArm.castShadow = true;
-    doll.add(dollLeftUpperArm);
-    
-    // Right upper arm - yellow
-    const dollRightUpperArm = new THREE.Mesh(dollUpperArmGeometry, dollUpperArmMaterial);
-    dollRightUpperArm.position.set(3.5, 8.75, 0);
-    dollRightUpperArm.castShadow = true;
-    doll.add(dollRightUpperArm);
-    
-    // Left lower arm - skin color
-    const dollLowerArmGeometry = new THREE.BoxGeometry(1.5, 2.5, 1.5);
-    const dollLowerArmMaterial = new THREE.MeshLambertMaterial({ color: 0xFFDBAE });
-    const dollLeftLowerArm = new THREE.Mesh(dollLowerArmGeometry, dollLowerArmMaterial);
-    dollLeftLowerArm.position.set(-3.5, 6.25, 0);
-    dollLeftLowerArm.castShadow = true;
-    doll.add(dollLeftLowerArm);
-    
-    // Right lower arm - skin color
-    const dollRightLowerArm = new THREE.Mesh(dollLowerArmGeometry, dollLowerArmMaterial);
-    dollRightLowerArm.position.set(3.5, 6.25, 0);
-    dollRightLowerArm.castShadow = true;
-    doll.add(dollRightLowerArm);
-    
-    // Left upper leg - skin color
-    const dollUpperLegGeometry = new THREE.BoxGeometry(1.5, 2.5, 1.5);
-    const dollUpperLegMaterial = new THREE.MeshLambertMaterial({ color: 0xFFDBAE });
-    const dollLeftUpperLeg = new THREE.Mesh(dollUpperLegGeometry, dollUpperLegMaterial);
-    dollLeftUpperLeg.position.set(-1.25, 3, 0);
-    dollLeftUpperLeg.castShadow = true;
-    doll.add(dollLeftUpperLeg);
-    
-    // Right upper leg - skin color
-    const dollRightUpperLeg = new THREE.Mesh(dollUpperLegGeometry, dollUpperLegMaterial);
-    dollRightUpperLeg.position.set(1.25, 3, 0);
-    dollRightUpperLeg.castShadow = true;
-    doll.add(dollRightUpperLeg);
-    
-    // Left lower leg - white
-    const dollLowerLegGeometry = new THREE.BoxGeometry(1.5, 2.5, 1.5);
-    const dollLowerLegMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
-    const dollLeftLowerLeg = new THREE.Mesh(dollLowerLegGeometry, dollLowerLegMaterial);
-    dollLeftLowerLeg.position.set(-1.25, 0.5, 0);
-    dollLeftLowerLeg.castShadow = true;
-    doll.add(dollLeftLowerLeg);
-    
-    // Right lower leg - white
-    const dollRightLowerLeg = new THREE.Mesh(dollLowerLegGeometry, dollLowerLegMaterial);
-    dollRightLowerLeg.position.set(1.25, 0.5, 0);
-    dollRightLowerLeg.castShadow = true;
-    doll.add(dollRightLowerLeg);
-    
+    // Try to load Young-hee doll from glTF
+    const LoaderClass = (typeof THREE !== 'undefined' && THREE.GLTFLoader) ? THREE.GLTFLoader : window.GLTFLoader;
+    if (LoaderClass) {
+        const gltfLoader = new LoaderClass();
+        gltfLoader.load('young_hee/scene.gltf', function(gltf) {
+            // Compute bounding box to center the model
+            const box = new THREE.Box3().setFromObject(gltf.scene);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            
+            // Create a group to handle rotation around the center
+            const dollGroup = new THREE.Group();
+            dollGroup.position.set(-0, 9.5, -93); // Set to visible location
+            // dollGroup.position.set(0, 9.5, 40);
+            gltf.scene.position.set(-center.x+0.9, -center.y, -center.z+3.1); // Offset to center the model
+            gltf.scene.scale.set(1.3, 1.3, 1.3);
+            dollGroup.add(gltf.scene);
+            
+            scene.add(dollGroup);
+            doll = dollGroup;
+        }, undefined, function(error) {
+            console.error('Error loading glTF:', error);
+        });
+    }
     return doll;
 }
 
@@ -533,12 +454,8 @@ function shootBullet() {
 
 // Smooth doll head rotation animation
 function animateDoll() {
-    // Smooth doll head rotation (head and hair turn together, eyes are part of head)
-    if (doll.children[0]) { // Head (with eyes attached)
-        doll.children[0].rotation.y += (dollRotation - doll.children[0].rotation.y) * 0.1;
-    }
-    if (doll.children[1]) { // Hair
-        doll.children[1].rotation.y += (dollRotation - doll.children[1].rotation.y) * 0.1;
+    if (doll) {
+        doll.rotation.y += (dollRotation -1.4 - doll.rotation.y) * 0.1;
     }
 }
 
